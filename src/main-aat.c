@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "../include/aat.h"
+#include "../include/strbuffer.h"
 
 // TODO: copied from old aat.c, need modification as it is not in aat.c anymore
 // 		and inorder print should return char* instead of print something out
@@ -16,7 +17,7 @@ int main(int argc, char* argv[]) {
 		int temp = v[i];
 		v[i] = v[j];
 		v[j] = temp;
-	}
+	} 
 
 	AatTree* tree = aat_tree_make();
 	printf("The list of input by order of insertion: \n");

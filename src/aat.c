@@ -1,9 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "../include/stack.h"
 #include "../include/aat.h"
+#include "../include/strbuffer.h"
 
 // -- internal struct definitions --
 struct aat_node {
@@ -177,10 +179,10 @@ bool aat_tree_delete(int key_, AatTree* tree) {
 }
 
 // using a stack implementation that is ChatGPT-generated for inorder print
-// TODO: change this to return string (char* or something similar in C) instead of printing it out directly
-void aat_tree_inorder_print(AatTree* tree) {
+char* aat_tree_inorder_print(AatTree* tree) {
 	NodeStack stack;
 	stack_init(&stack);
+	StrBuffer* sb = strbuffer_make(INITIAL_CAPACITY);
 
 	AatNode* current = tree->root;
 
@@ -190,9 +192,14 @@ void aat_tree_inorder_print(AatTree* tree) {
 			current = current->left;
 		}
 		current = stack_pop(&stack);
-		printf("%d, ", current-> key);
+		char temp[32];
+		snprintf(temp, sizeof(temp), "%d, ", current->key);
+		strbuffer_append(*sb, temp);
 		current = current->right;
 	}
 
+	char* ret = strbuffer_get_string(*sb);
 	stack_free(&stack);
+	strbuffer_free(sb);
+	return ret;
 }

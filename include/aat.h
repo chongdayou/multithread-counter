@@ -21,6 +21,6 @@ AatTree* aat_tree_make();
 void aat_tree_free(AatTree* tree);
 void aat_tree_insert(int key_, AatTree* tree);
 bool aat_tree_delete(int key_, AatTree* tree);
-void aat_tree_inorder_print(AatTree* tree);
+char* aat_tree_inorder_print(AatTree* tree);
 
 #endif
