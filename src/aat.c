@@ -9,7 +9,8 @@
 
 // -- internal struct definitions --
 struct aat_node {
-	int key;
+	char* key;
+	int value;
 	int level;
 	AatNode* left;
 	AatNode* right;
@@ -23,7 +24,7 @@ static bool bottom_initialized = false;
 // -- private method prototypes --
 // for AatNode
 static void init_bottom();
-static AatNode* aat_node_make(int key_);
+static AatNode* aat_node_make(char* key_);
 static void aat_node_free(AatNode* node_ptr);
 static void rotate_right(AatNode** node_ptr);
 static void rotate_left(AatNode** node_ptr);
