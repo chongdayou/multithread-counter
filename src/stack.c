@@ -1,12 +1,6 @@
-typedef struct AatNode {
-    int key;
-    int level;
-    struct AatNode* left;
-    struct AatNode* right;
-} AatNode;
-
 #include <stdlib.h>
 #include "../include/stack.h"
+#include "../include/aat.h"
 
 #define INITIAL_STACK_CAPACITY 16
 

@@ -1,12 +1,11 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "../include/aat.h"
-#include "../include/strbuffer.h"
 
-// TODO: copied from old aat.c, need modification as it is not in aat.c anymore
-// 		and inorder print should return char* instead of print something out
 int main(int argc, char* argv[]) {
 	size_t n = 100;
+	char* traversal_result;
 	int*  v = malloc(n * sizeof(int));
 	for (int i = 0; i < n; i++) {
 		v[i] = i;
@@ -28,7 +27,9 @@ int main(int argc, char* argv[]) {
 	printf("\n");
 
 	printf("Inorder traversal of the tree: \n");
-	aat_tree_inorder_print(tree);
+	traversal_result = aat_tree_inorder_print(tree);
+	printf("%s", traversal_result);
+	free(traversal_result);
 	printf("\n");
 
 	printf("Deleting all multiples of 10 in the tree...\n");
@@ -36,7 +37,9 @@ int main(int argc, char* argv[]) {
 	for (int i=0; i < 10; i++) {
 		aat_tree_delete((i+1)*10, tree);
 	}
-	aat_tree_inorder_print(tree);
+	traversal_result = aat_tree_inorder_print(tree);
+	printf("%s", traversal_result);
+	free(traversal_result);
 	printf("\n");
 	printf("Deleting all even numbers in the tree..." 
 		"this will also test removing none existing values " 
@@ -45,7 +48,9 @@ int main(int argc, char* argv[]) {
 	for (int i=0; i < n/2; i++) {
 		aat_tree_delete((i+1)*2, tree);
 	}
-	aat_tree_inorder_print(tree);
+	traversal_result = aat_tree_inorder_print(tree);
+	printf("%s", traversal_result);
+	free(traversal_result);
 	printf("\n");
 
 	printf("Building a second tree for testing if bottom node is shared correctly: \n");
@@ -58,11 +63,14 @@ int main(int argc, char* argv[]) {
 		aat_tree_delete(i, secTree);
 	}
 	printf("Inorder traversal of second tree: \n");
-	aat_tree_inorder_print(secTree);
+	traversal_result = aat_tree_inorder_print(secTree);
+	printf("%s", traversal_result);
+	free(traversal_result);
 	printf("\n");
 
 	aat_tree_free(tree);
 	aat_tree_free(secTree);
 	free(v);
+
 	return 0;
 }

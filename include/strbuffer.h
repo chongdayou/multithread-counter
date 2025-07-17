@@ -12,7 +12,7 @@ typedef struct StrBuffer {
 } StrBuffer;
 
 StrBuffer* strbuffer_make(size_t capacity);
-void strbuffer_append(StrBuffer strbuffer, const char* to_append);
+void strbuffer_append(StrBuffer* strbuffer, const char* to_append);
 char* strbuffer_get_string(StrBuffer strbuffer);
 void strbuffer_free(StrBuffer* strbuffer);
 #endif

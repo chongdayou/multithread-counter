@@ -194,11 +194,11 @@ char* aat_tree_inorder_print(AatTree* tree) {
 		current = stack_pop(&stack);
 		char temp[32];
 		snprintf(temp, sizeof(temp), "%d, ", current->key);
-		strbuffer_append(*sb, temp);
+		strbuffer_append(sb, temp);
 		current = current->right;
 	}
 
-	char* ret = strbuffer_get_string(*sb);
+	char* ret = strdup(strbuffer_get_string(*sb));
 	stack_free(&stack);
 	strbuffer_free(sb);
 	return ret;
