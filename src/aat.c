@@ -9,6 +9,8 @@
 
 // TODO: enforce type safety/type checking? Now everything working with key and value are void*
 // 		which requires ethical use from the caller.
+// TODO: right now a bunch of function pointers are needed to make a tree, 
+// 		find a way to make it easier for the caller?
 
 // -- internal struct definitions --
 struct aat_node {
@@ -19,7 +21,7 @@ struct aat_node {
 	void (* key_free) (void*);
 
 	void* value;
-	void (* value_process) (void*);
+	void* (* value_process) (void*);
 	char* (* value_to_string) (void*);
 	void (* value_free) (void*);
 
@@ -52,44 +54,77 @@ static void rotate_right(AatNode** node_ptr);
 static void rotate_left(AatNode** node_ptr);
 static void aat_node_skew(AatNode** node_ptr);
 static void aat_node_split(AatNode** node_ptr);
-static int aat_node_compare(AatNode* this, AatNode* other);
-// for function pointers
-// require free()
-static void* raw_to_str_process(void* raw);
-// require free()
-static void* raw_to_int_process(void* raw);
-static int str_compare(void* a, void* b);
-// require free()
-static char* str_to_string(void* raw);
-static void str_free(void* raw);
-static void int_free(void* raw);
+static int aat_node_compare(AatNode* this, AatNode* other)  __attribute__((unused));
 // for AatTree
 static void aat_tree_free_helper(AatNode* root);
-static void aat_tree_insert_helper(int key_, AatNode** root);
-static void aat_tree_insert_rebalance(int key_, AatNode** root);
-static bool aat_tree_delete_helper(int key_, AatTree* tree, AatNode** root);
+static void aat_tree_insert_helper(
+	AatNode** root, 
+	void* processed_key, 
+	void* (* key_process) (void*), 
+	int (* key_compare) (void* key_a, void* key_b),
+	char* (* key_to_string) (void*),
+	void (* key_free) (void*), 
+	void* processed_value,
+	void* (* value_process) (void*),
+	char* (* value_to_string) (void*),
+	void (* value_free) (void*)
+);
+static void aat_tree_insert_rebalance(
+	AatNode** root, 
+	void* processed_key, 
+	void* (* key_process) (void*), 
+	int (* key_compare) (void* key_a, void* key_b),
+	char* (* key_to_string) (void*),
+	void (* key_free) (void*), 
+	void* processed_value,
+	void* (* value_process) (void*),
+	char* (* value_to_string) (void*),
+	void (* value_free) (void*)
+);
+static bool aat_tree_delete_helper(AatTree* tree, AatNode** root, void* processed_key);
 
 
 // -- method implementations --
 // for function pointers
-static void* raw_to_str_process(void* raw) {
+void* raw_to_str_process(void* raw) {
+	if (!raw) {
+		fprintf(stderr, "Null pointer passed to raw_to_int_process().\n");
+		exit(1);
+	}
 	return strdup((char*) raw);
 };
-static void* raw_to_int_process(void* raw) {
+void* raw_to_int_process(void* raw) {
+	if (!raw) {
+		fprintf(stderr, "Null pointer passed to raw_to_int_process().\n");
+		exit(1);
+	}
 	int* ret = malloc(sizeof(int));
 	*ret = *(int*)raw;
 	return ret;
 };
-static int str_compare(void* a, void* b) {
+int str_compare(void* a, void* b) {
 	return strcmp((char*) a, (char*) b);
 };
-static char* str_to_string(void* raw) {
+int int_compare(void* a, void* b) {
+	return (*(int*)a > *(int*)b) - (*(int*)a < *(int*)b);
+}
+char* str_to_string(void* raw) {
 	return strdup((char*) raw);
 };
-static void str_free(void* raw) {
+char* int_to_string(void* raw) {
+	char* buffer = malloc(12);
+	if (!buffer) {
+		fprintf(stderr, "Heap allocation failed in int_to_string()\n");
+		exit(1);
+	}
+	int processed = *(int*)raw;
+	snprintf(buffer, 12, "%d", processed);
+	return buffer;
+}
+void str_free(void* raw) {
 	free(raw);
 };
-static void int_free(void* raw) {
+void int_free(void* raw) {
 	free(raw);
 };
 
@@ -165,7 +200,7 @@ static void aat_node_free(AatNode* node) {
  * 		and positive if this->key is larger than other->key.
  */
 static int aat_node_compare(AatNode* this, AatNode* other) {
-	this->key_compare(this->key, other->key);
+	return this->key_compare(this->key, other->key);
 }
 
 /**
@@ -279,12 +314,12 @@ void aat_tree_free(AatTree* tree) {
  * to the root, and rebalance at each point of the path if needed.
  * 
  * @param root Current node to be examined
- * @param key Key of the new node
+ * @param processed_key Key of the new node
  * @param key_process Function pointer to specify type of key
  * @param key_compare Function pointer to specify how to compare keys between nodes
  * @param key_to_string Function pointer to return key as char*
  * @param key_free Function pointer to free key
- * @param value Value of the new node
+ * @param processed_value Value of the new node
  * @param value_process Function pointer to specify type of value
  * @param value_to_string Function pointer to return value as char*
  * @param value_free Function pointer to free value
@@ -294,38 +329,38 @@ void aat_tree_free(AatTree* tree) {
  */
 static void aat_tree_insert_rebalance(
 	AatNode** root, 
-	void* key, 
+	void* processed_key, 
 	void* (* key_process) (void*), 
 	int (* key_compare) (void* key_a, void* key_b),
 	char* (* key_to_string) (void*),
 	void (* key_free) (void*), 
-	void* value,
+	void* processed_value,
 	void* (* value_process) (void*),
 	char* (* value_to_string) (void*),
 	void (* value_free) (void*)
 ) {
-	if ((*root)->key_compare(key, (*root)->key) < 0) {
+	if ((*root)->key_compare(processed_key, (*root)->key) < 0) {
 		aat_tree_insert_helper(
 			&(*root)->left,
-			key,
+			processed_key,
 			key_process,
 			key_compare,
 			key_to_string,
 			key_free,
-			value,
+			processed_value,
 			value_process,
 			value_to_string,
 			value_free
 		);
-	} else if ((*root)->key_compare(key, (*root)->key) > 0) {
+	} else if ((*root)->key_compare(processed_key, (*root)->key) > 0) {
 		aat_tree_insert_helper(
 			&(*root)->right,
-			key,
+			processed_key,
 			key_process,
 			key_compare,
 			key_to_string,
 			key_free,
-			value,
+			processed_value,
 			value_process,
 			value_to_string,
 			value_free
@@ -345,36 +380,36 @@ static void aat_tree_insert_rebalance(
  * happen. This recursive call stack ends when insertion actually happens.
  * 
  * @param root Current node to be examined
- * @param key Key of the new node
+ * @param processed_key Key of the new node
  * @param key_process Function pointer to specify type of key
  * @param key_compare Function pointer to specify how to compare keys between nodes
  * @param key_to_string Function pointer to return key as char*
  * @param key_free Function pointer to free key
- * @param value Value of the new node
+ * @param processed_value Value of the new node
  * @param value_process Function pointer to specify type of value
  * @param value_to_string Function pointer to return value as char*
  * @param value_free Function pointer to free value
  */
 static void aat_tree_insert_helper(
 	AatNode** root, 
-	void* key, 
+	void* processed_key, 
 	void* (* key_process) (void*), 
 	int (* key_compare) (void* key_a, void* key_b),
 	char* (* key_to_string) (void*),
 	void (* key_free) (void*), 
-	void* value,
+	void* processed_value,
 	void* (* value_process) (void*),
 	char* (* value_to_string) (void*),
 	void (* value_free) (void*)
 ) {
 	if (*root == _aat_bottom) {
 		*root = aat_node_make(
-			key,
+			processed_key,
 			key_process,
 			key_compare,
 			key_to_string,
 			key_free,
-			value,
+			processed_value,
 			value_process,
 			value_to_string,
 			value_free
@@ -382,12 +417,12 @@ static void aat_tree_insert_helper(
 	} else {
 		aat_tree_insert_rebalance(
 			root,
-			key,
+			processed_key,
 			key_process,
 			key_compare,
 			key_to_string,
 			key_free,
-			value,
+			processed_value,
 			value_process,
 			value_to_string,
 			value_free
@@ -402,19 +437,35 @@ static void aat_tree_insert_helper(
  * @param key Key of the new node
  * @param value Value of the new node
  */
-void aat_tree_insert(AatTree* tree, void* key, void* value) {
+void aat_tree_insert(AatTree* tree, void* raw_key, void* raw_value) {
+	if (!tree) {
+        fprintf(stderr, "Null tree passed into aat_tree_insert().\n");
+        exit(1);
+    }
+    if (!raw_key) {
+        fprintf(stderr, "Null key passed into aat_tree_insert().\n");
+        exit(1);
+    }
+    if (!raw_value) {
+        fprintf(stderr, "Null key passed into aat_tree_insert().\n");
+        exit(1);
+    }
+	void* processed_key = tree->key_process(raw_key);
+	void* processed_value = tree->value_process(raw_value);
 	aat_tree_insert_helper(
 		&tree->root, 
-		key, 
+		processed_key, 
 		tree->key_process,
 		tree->key_compare,
 		tree->key_to_string,
 		tree->key_free,
-		value,
+		processed_value,
 		tree->value_process,
 		tree->value_to_string,
 		tree->value_free
 	);
+	free(processed_key);
+	free(processed_value);
 }
 
 /**
@@ -428,20 +479,33 @@ void aat_tree_insert(AatTree* tree, void* key, void* value) {
  * @note If either tree or key is NULL, an error will be print to stderr and 
  * 		the program will exist with exit(1).
  */
-AatNode* aat_tree_search(AatTree* tree, void* key) {
-	if (tree == NULL || key == NULL) {
+AatNode* aat_tree_search(AatTree* tree, void* raw_key) {
+	if (tree == NULL || raw_key == NULL) {
 		fprintf(stderr, "Invalid NULL pointer.");
 		exit(1);
 	}
+	if (aat_tree_is_empty(tree)) return NULL;
 
+	void* processed_key = tree->root->key_process(raw_key);
 	AatNode* current = tree->root;
 	while (current != _aat_bottom) {
-		if (current->key_compare(current->key, key) == 0) return current;
-		if (current->key_compare(current->key, key) < 0) current = current->right;
+		if (tree->key_compare(current->key, processed_key) == 0) return current;
+		if (tree->key_compare(current->key, processed_key) < 0) current = current->right;
 		else current = current->left;
 	}
 
 	return NULL;
+}
+
+/**
+ * Check if a given tree is empty.
+ * 
+ * @param tree Tree to check
+ * 
+ * @return true if tree does not have any node (except _aat_bottom), false otherwise
+ */
+bool aat_tree_is_empty(AatTree* tree) {
+	return tree->root == _aat_bottom;
 }
 
 /**
@@ -455,44 +519,64 @@ AatNode* aat_tree_search(AatTree* tree, void* key) {
  * @note If either tree or key is NULL, an error will be print to stderr and 
  * 		the program will exist with exit(1).
  */
-bool aat_tree_exists(AatTree* tree, void* key) {
-	if (tree == NULL || key == NULL) {
+bool aat_tree_exists(AatTree* tree, void* raw_key) {
+	if (tree == NULL || raw_key == NULL) {
 		fprintf(stderr, "Invalid NULL pointer.");
 		exit(1);
 	}
+	if (aat_tree_is_empty(tree)) return false;
 
+	void* processed_key = tree->key_process(raw_key);
 	AatNode* current = tree->root;
 	while (current != _aat_bottom) {
-		if (current->key_compare(current->key, key) == 0) return true;
-		if (current->key_compare(current->key, key) < 0) current = current->right;
+		if (tree->key_compare(current->key, processed_key) == 0) return true;
+		if (tree->key_compare(current->key, processed_key) < 0) current = current->right;
 		else current = current->left;
 	}
 
 	return false;
 }
 
-static bool aat_tree_delete_helper(AatTree* tree, AatNode** root, void* key) {
+/**
+ * Helper method for aat_tree_delete(). Called recursively to find and remove the node with given key.
+ * Restructure the tree where needed along the call path from leaf to root.
+ * 
+ * @param tree Tree to delete the node from
+ * @param root Current node the method is working on
+ * @param processed_key Key of the node to delete from. Must be processed by key_process function 
+ * 		pointed in the tree.
+ * 
+ * @return at the end of the call stack, return true if a node is deleted, false otherwise
+ */
+static bool aat_tree_delete_helper(AatTree* tree, AatNode** root, void* processed_key) {
 	// base case, reach _aat_bottom
 	if (*root == _aat_bottom) return false;
 
 	bool success = false;
 	// search down the tree
 	tree->last = *root;
-	if (key < (*root)->key) {
-		success = aat_tree_delete_helper(key, tree, &(*root)->left);
+	if (tree->key_compare(processed_key, (*root)->key) < 0) {
+		success = aat_tree_delete_helper(tree, &(*root)->left, processed_key);
 	}
 	else {
 		tree->deleted = *root;
-		success = aat_tree_delete_helper(key, tree, &(*root)->right);
+		success = aat_tree_delete_helper(tree, &(*root)->right, processed_key);
 	}
 
 	// remove
 	if (
 		(*root == tree->last) && 
 		(tree->deleted != _aat_bottom) && 
-		(key == tree->deleted->key)
+		(tree->key_compare(processed_key, tree->deleted->key) == 0)
 	) {
-		tree->deleted->key = (*root)->key;
+		// to prevent use-after-free when root == deleted
+		// key_process and value_process are called before key_free and value_free
+		void* new_key = tree->key_process((*root)->key);
+		void* new_value = tree->value_process((*root)->value);
+		tree->key_free(tree->deleted->key);
+		tree->deleted->key = new_key;
+		tree->value_free(tree->deleted->value);
+		tree->deleted->value = new_value;
 		tree->deleted = _aat_bottom;
 		*root = (*root)->right;
 		aat_node_free(tree->last);
@@ -516,12 +600,30 @@ static bool aat_tree_delete_helper(AatTree* tree, AatNode** root, void* key) {
 	return success;
 }
 
-bool aat_tree_delete(AatTree* tree, void* key) {
-	return aat_tree_delete_helper(tree, &tree->root, key);
+/**
+ * Delete a node with the given key.
+ * 
+ * @param tree Tree that the node should delete from
+ * @param raw_key void* key to be deleted
+ * 
+ * @return true if a node is found and deleted, false otherwise
+ */
+bool aat_tree_delete(AatTree* tree, void* raw_key) {
+	void* processed_key = tree->key_process(raw_key);
+	bool success =  aat_tree_delete_helper(tree, &tree->root, processed_key);
+	free(processed_key);
+	return success;
 }
 
-// using a stack implementation that is ChatGPT-generated for inorder print
+/**
+ * In-order traversal of the tree.
+ * 
+ * @param tree Tree to traverse
+ * 
+ * @return String of keys of nodes in in-order traversal of the tree
+ */
 char* aat_tree_inorder_print(AatTree* tree) {
+	// using a stack implementation that is ChatGPT-generated for inorder print
 	NodeStack stack;
 	stack_init(&stack);
 	StrBuffer* sb = strbuffer_make(INITIAL_CAPACITY);
@@ -534,9 +636,11 @@ char* aat_tree_inorder_print(AatTree* tree) {
 			current = current->left;
 		}
 		current = stack_pop(&stack);
-		char temp[32];
-		snprintf(temp, sizeof(temp), "%d, ", current->key);
-		strbuffer_append(sb, temp);
+		char* key_str = tree->key_to_string(current->key);
+		strbuffer_append(sb, key_str);
+		free(key_str);
+		//if (!stack_is_empty(&stack)) 
+		strbuffer_append(sb, ", ");
 		current = current->right;
 	}
 
