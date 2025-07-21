@@ -12,6 +12,7 @@ typedef struct word_counter {
 Counter* counter_make();
 void counter_into_tree(Counter* counter, FILE* file);
 int counter_search_word_occurence(Counter* counter, const char* word);
-void counter_free();
+char* counter_get_all_pairs(Counter* counter);
+void counter_free(Counter* counter);
 
 #endif

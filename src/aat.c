@@ -329,43 +329,47 @@ void aat_tree_free(AatTree* tree) {
  */
 static void aat_tree_insert_rebalance(
 	AatNode** root, 
-	void* processed_key, 
+	void* raw_key, 
 	void* (* key_process) (void*), 
 	int (* key_compare) (void* key_a, void* key_b),
 	char* (* key_to_string) (void*),
 	void (* key_free) (void*), 
-	void* processed_value,
+	void* raw_value,
 	void* (* value_process) (void*),
 	char* (* value_to_string) (void*),
 	void (* value_free) (void*)
 ) {
+	void* processed_key = (*root)->key_process(raw_key);
 	if ((*root)->key_compare(processed_key, (*root)->key) < 0) {
 		aat_tree_insert_helper(
 			&(*root)->left,
-			processed_key,
+			raw_key,
 			key_process,
 			key_compare,
 			key_to_string,
 			key_free,
-			processed_value,
+			raw_value,
 			value_process,
 			value_to_string,
 			value_free
 		);
+		free(processed_key);
 	} else if ((*root)->key_compare(processed_key, (*root)->key) > 0) {
 		aat_tree_insert_helper(
 			&(*root)->right,
-			processed_key,
+			raw_key,
 			key_process,
 			key_compare,
 			key_to_string,
 			key_free,
-			processed_value,
+			raw_value,
 			value_process,
 			value_to_string,
 			value_free
 		);
+		free(processed_key);
 	} else {
+		free(processed_key);
 		fprintf(stderr, "Invalid key: key already exist in tree.");
 		exit(1);
 	}
@@ -392,24 +396,24 @@ static void aat_tree_insert_rebalance(
  */
 static void aat_tree_insert_helper(
 	AatNode** root, 
-	void* processed_key, 
+	void* raw_key, 
 	void* (* key_process) (void*), 
 	int (* key_compare) (void* key_a, void* key_b),
 	char* (* key_to_string) (void*),
 	void (* key_free) (void*), 
-	void* processed_value,
+	void* raw_value,
 	void* (* value_process) (void*),
 	char* (* value_to_string) (void*),
 	void (* value_free) (void*)
 ) {
 	if (*root == _aat_bottom) {
 		*root = aat_node_make(
-			processed_key,
+			raw_key,
 			key_process,
 			key_compare,
 			key_to_string,
 			key_free,
-			processed_value,
+			raw_value,
 			value_process,
 			value_to_string,
 			value_free
@@ -417,12 +421,12 @@ static void aat_tree_insert_helper(
 	} else {
 		aat_tree_insert_rebalance(
 			root,
-			processed_key,
+			raw_key,
 			key_process,
 			key_compare,
 			key_to_string,
 			key_free,
-			processed_value,
+			raw_value,
 			value_process,
 			value_to_string,
 			value_free
@@ -450,22 +454,19 @@ void aat_tree_insert(AatTree* tree, void* raw_key, void* raw_value) {
         fprintf(stderr, "Null key passed into aat_tree_insert().\n");
         exit(1);
     }
-	void* processed_key = tree->key_process(raw_key);
-	void* processed_value = tree->value_process(raw_value);
+
 	aat_tree_insert_helper(
 		&tree->root, 
-		processed_key, 
+		raw_key, 
 		tree->key_process,
 		tree->key_compare,
 		tree->key_to_string,
 		tree->key_free,
-		processed_value,
+		raw_value,
 		tree->value_process,
 		tree->value_to_string,
 		tree->value_free
 	);
-	free(processed_key);
-	free(processed_value);
 }
 
 /**
@@ -489,12 +490,16 @@ AatNode* aat_tree_search(AatTree* tree, void* raw_key) {
 	void* processed_key = tree->root->key_process(raw_key);
 	AatNode* current = tree->root;
 	while (current != _aat_bottom) {
-		if (tree->key_compare(current->key, processed_key) == 0) return current;
+		if (tree->key_compare(current->key, processed_key) == 0) {
+			free(processed_key);
+			return current;
+		}
 		if (tree->key_compare(current->key, processed_key) < 0) current = current->right;
 		else current = current->left;
 	}
+	free(processed_key);
 
-	return NULL;
+	return current;
 }
 
 /**
@@ -529,12 +534,79 @@ bool aat_tree_exists(AatTree* tree, void* raw_key) {
 	void* processed_key = tree->key_process(raw_key);
 	AatNode* current = tree->root;
 	while (current != _aat_bottom) {
-		if (tree->key_compare(current->key, processed_key) == 0) return true;
+		if (tree->key_compare(current->key, processed_key) == 0) {
+			free(processed_key);
+			return true;
+		}
 		if (tree->key_compare(current->key, processed_key) < 0) current = current->right;
 		else current = current->left;
 	}
+	free(processed_key);
 
 	return false;
+}
+
+/**
+ * Get value from a node with given key in the tree.
+ * 
+ * @param tree Tree to find the node from
+ * @param raw_key Key of the node to get value from
+ * 
+ * @return Value of the node if the node exists, NULL otherwise
+ * 
+ * @note if either tree or raw_key is invalid, error will be thrown to stderr 
+ * 		and program will exit with exit(1).
+ */
+void* aat_tree_get_value(AatTree* tree, void* raw_key) {
+	if (!tree) {
+		fprintf(stderr, "Invalid tree passed into aat_tree_get_value().\n");
+		exit(1);
+	}
+	if (!raw_key) {
+		fprintf(stderr, "Invalid key passed into aat_tree_get_value().\n");
+		exit(1);
+	}
+	if (!aat_tree_exists(tree, raw_key)) return NULL;
+
+	AatNode* node = aat_tree_search(tree, raw_key);
+	void* value = tree->value_process(node->value);
+	return value;
+}
+
+/**
+ * Find a node inside the tree with given key, and set the node's value to the new value.
+ * 
+ * @param tree Tree to find the node from
+ * @param raw_key Key of the node that needs to change value
+ * @param new_raw_value New value that the node will get
+ * 
+ * @return true if the new value is successfully set, false if node with given key does not exist
+ * 
+ * @note if tree, raw_key, or new_raw_value is invalid, error will be thrown to stderr 
+ * 		and program will exit with exit(1).
+ */
+bool aat_tree_set_value(AatTree* tree, void* raw_key, void* new_raw_value) {
+	if (!tree) {
+		fprintf(stderr, "Invalid tree passed into aat_tree_set_value().\n");
+		exit(1);
+	}
+	if (!raw_key) {
+		fprintf(stderr, "Invalid key passed into aat_tree_set_value().\n");
+		exit(1);
+	}
+	if (!new_raw_value) {
+		fprintf(stderr, "Invalid value passed into aat_tree_set_value().\n");
+		exit(1);
+	}
+
+	if (!aat_tree_exists(tree, raw_key)) return false;
+
+	void* processed_key = tree->key_process(raw_key);
+	AatNode* node = aat_tree_search(tree, processed_key);
+	tree->value_free(node->value);
+	node->value = tree->value_process(new_raw_value);
+	free(processed_key);
+	return true;
 }
 
 /**
@@ -616,13 +688,13 @@ bool aat_tree_delete(AatTree* tree, void* raw_key) {
 }
 
 /**
- * In-order traversal of the tree.
+ * In-order traversal of the tree. Each node is represented as pair (key:value).
  * 
  * @param tree Tree to traverse
  * 
  * @return String of keys of nodes in in-order traversal of the tree
  */
-char* aat_tree_inorder_print(AatTree* tree) {
+char* aat_tree_inorder_list(AatTree* tree) {
 	// using a stack implementation that is ChatGPT-generated for inorder print
 	NodeStack stack;
 	stack_init(&stack);
@@ -636,11 +708,16 @@ char* aat_tree_inorder_print(AatTree* tree) {
 			current = current->left;
 		}
 		current = stack_pop(&stack);
+		strbuffer_append(sb, "(");
 		char* key_str = tree->key_to_string(current->key);
 		strbuffer_append(sb, key_str);
 		free(key_str);
+		strbuffer_append(sb, ":");
+		char* value_str = tree->value_to_string(current->value);
+		strbuffer_append(sb, value_str);
+		free(value_str);
 		//if (!stack_is_empty(&stack)) 
-		strbuffer_append(sb, ", ");
+		strbuffer_append(sb, "), ");
 		current = current->right;
 	}
 

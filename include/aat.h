@@ -54,8 +54,11 @@ void aat_tree_insert(AatTree* tree, void* raw_key, void* raw_value);
 AatNode* aat_tree_search(AatTree* tree, void* raw_key);
 bool aat_tree_is_empty(AatTree* tree);
 bool aat_tree_exists(AatTree* tree, void* raw_key);
+// need free()
+void* aat_tree_get_value(AatTree* tree, void* raw_key);
+bool aat_tree_set_value(AatTree* tree, void* raw_key, void* new_raw_key);
 bool aat_tree_delete(AatTree* tree, void* raw_key);
 // Returns a dynamically allocated string; caller must free()
-char* aat_tree_inorder_print(AatTree* tree);
+char* aat_tree_inorder_list(AatTree* tree);
 
 #endif
