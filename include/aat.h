@@ -50,7 +50,7 @@ AatTree* aat_tree_make(
 	void (* value_free) (void*)
 );
 void aat_tree_free(AatTree* tree);
-void aat_tree_insert(AatTree* tree, void* raw_key, void* raw_value);
+bool aat_tree_insert(AatTree* tree, void* raw_key, void* raw_value);
 AatNode* aat_tree_search(AatTree* tree, void* raw_key);
 bool aat_tree_is_empty(AatTree* tree);
 bool aat_tree_exists(AatTree* tree, void* raw_key);

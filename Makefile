@@ -6,7 +6,7 @@ runAatMain: cleanAatMain buildAat
 	./build/aatMain
 
 runCounterMain: cleanCounterMain buildCounter
-	./build/counterMain
+	./build/counterMain text/HamletActISceneII.txt
 
 buildAat: build/main-aat.o build/aat.o build/stack.o build/strbuffer.o
 	gcc build/main-aat.o build/aat.o build/stack.o build/strbuffer.o -o build/aatMain

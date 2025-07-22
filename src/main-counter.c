@@ -5,7 +5,7 @@
 
 int main(int argc, char* argv[]) {
 
-	FILE* file = fopen("text/HamletActISceneII.txt", "r");
+	FILE* file = fopen(argv[1], "r");
 	if (!file) {
 		fprintf(stderr, "Failed to open file.\n");
 		exit(1);
