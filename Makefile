@@ -1,4 +1,5 @@
 default:
+	mkdir -p build
 	$(MAKE) runCounterMain
 
 runAatMain: cleanAatMain buildAat
