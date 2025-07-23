@@ -16,10 +16,10 @@ int main(int argc, char* argv[]) {
 	fclose(file);
 
 	int hamlet_occurence = counter_search_word_occurence(counter, "hamlet");
-	printf("The word \"hamlet\" appeared this many times: %d.\n\n", hamlet_occurence);
+	printf("The word \"hamlet\" appeared this many times: %d.\n", hamlet_occurence);
 
 	char* hamlet_pairs = counter_get_all_pairs(counter);
-	printf("Each word and the number it appeared in file: \n%s", hamlet_pairs);
+	printf("Each word and the number it appeared in file: \n%s\n\n", hamlet_pairs);
 
 	free(hamlet_pairs);
 	counter_free(counter);

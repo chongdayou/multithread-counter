@@ -8,6 +8,8 @@
 		"type_traits": "c",
 		"utility": "c",
 		"counter.h": "c",
-		"string.h": "c"
+		"string.h": "c",
+		"msg.h": "c",
+		"unistd.h": "c"
 	}
 }

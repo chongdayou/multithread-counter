@@ -619,7 +619,7 @@ char* aat_tree_inorder_list(AatTree* tree) {
 		strbuffer_append(sb, value_str);
 		free(value_str);
 		//if (!stack_is_empty(&stack)) 
-		strbuffer_append(sb, "), ");
+		strbuffer_append(sb, "),");
 		current = current->right;
 	}
 

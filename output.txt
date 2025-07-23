@@ -1,0 +1,33 @@
+mkdir -p build
+make runMultiprocMain
+make[1]: Entering directory '/mnt/c/Users/terry/_Study/research/systems-2025summer/multithread-counter'
+rm -f build/*{.o,.d,multiprocMain,senderMain}
+gcc build/main-sender.o build/counter.o build/strbuffer.o build/aat.o build/stack.o -o build/senderMain
+gcc build/main-multiproc.o build/counter.o build/strbuffer.o build/aat.o build/stack.o -o build/multiprocMain
+./build/multiprocMain text/HamletActISceneII.txt text/HamletActIISceneI.txt text/HamletActIIISceneI.txt text/HamletActIIISceneII.txt text/HamletActIVSceneV.txt
+About to fork [1]
+In proc_sender: execvp on ./build/senderMain with text/HamletActISceneII.txt
+About to fork [2]
+In proc_sender: execvp on ./build/senderMain with text/HamletActIISceneI.txt
+About to fork [5]
+In proc_sender: execvp on ./build/senderMain with text/HamletActIVSceneV.txt
+About to fork [4]
+In proc_sender: execvp on ./build/senderMain with text/HamletActIIISceneII.txt
+senderMain: started with file text/HamletActIVSceneV.txt
+senderMain: started with file text/HamletActIIISceneI.txt
+senderMain: started with file text/HamletActIISceneI.txt
+senderMain: started with file text/HamletActIIISceneII.txt
+senderMain: started with file text/HamletActISceneII.txt
+Calling counter_get_all_pairs
+About to enter message loop.
+About to send message.
+About to send message.
+senderMain: finished.
+Receiving message [1].
+Received message:(a:5),(actions:1),(affair:1),(all:3),(alone:1),(along:1),(and:10),(are:1),(as:1),(aside:2),(auspicious:1),(ay:1),(barrd:1),(be:3),(bear:1),(befitted:1),(better:1),(black:1),(breath:1),(brothers:1),(brow:1),(but:3),(can:1),(cast:1),(claudius:2),(cloak:1),(colour:1),(common:2),(contracted:1),(cousin:1),(customary:1),(dear:1),(death:1),(defeated:1),(dejected:1),(delight:1),(denmark:1),(denote:1),(die:1),(dirge:1),(discretion:1),(do:1),(dole:1),(dropping:1),(dust:1),(equal:1),(eternity:1),(ever:1),(eye:3),(far:1),(father:1),(for:4),(forcd:1),(forms:1),(fought:1),(freely:1),(friend:1),(fruitful:1),(funeral:1),(gertrude:2),(gone:1),(good:2),(green:1),(grief:2),(hamlet:7),(hath:1),(have:4),(havior:1),(hearts:1),(herein:1),(him:1),(i:2),(if:1),(imperial:1),(in:7),(indeed:1),(inky:1),(is:2),(it:5),(jointress:1),(joy:1),(kin:2),(kind:2),(king:2),(kingdom:1),(know:1),(knowst:1),(less:2),(let:1),(lids:1),(like:1),(little:2),(lives:1),(look:1),(madam:2),(man:1),(marriage:1),(me:1),(memory:1),(might:1),(mirth:1),(moods:1)
+Received message:(a:5),(actions:1),(affair:1),(all:3),(alone:1),(along:1),(and:10),(are:1),(as:1),(aside:2),(auspicious:1),(ay:1),(barrd:1),(be:3),(bear:1),(befitted:1),(better:1),(black:1),(breath:1),(brothers:1),(brow:1),(but:3),(can:1),(cast:1),(claudius:2),(cloak:1),(colour:1),(common:2),(contracted:1),(cousin:1),(customary:1),(dear:1),(death:1),(defeated:1),(dejected:1),(delight:1),(denmark:1),(denote:1),(die:1),(dirge:1),(discretion:1),(do:1),(dole:1),(dropping:1),(dust:1),(equal:1),(eternity:1),(ever:1),(eye:3),(far:1),(father:1),(for:4),(forcd:1),(forms:1),(fought:1),(freely:1),(friend:1),(fruitful:1),(funeral:1),(gertrude:2),(gone:1),(good:2),(green:1),(grief:2),(hamlet:7),(hath:1),(have:4),(havior:1),(hearts:1),(herein:1),(him:1),(i:2),(if:1),(imperial:1),(in:7),(indeed:1),(inky:1),(is:2),(it:5),(jointress:1),(joy:1),(kin:2),(kind:2),(king:2),(kingdom:1),(know:1),(knowst:1),(less:2),(let:1),(lids:1),(like:1),(little:2),(lives:1),(look:1),(madam:2),(man:1),(marriage:1),(me:1),(memory:1),(might:1),(mirth:1),(moods:1)
+Received message:,(more:2),(mother:1),(must:1),(my:3),(nature:2),(nay:1),(nighted:1),(no:1),(noble:1),(nor:5),(not:3),(now:2),(of:8),(off:1),(on:2),(one:3),(our:6),(ourselves:1),(particular:1),(passeth:1),(passing:1),(play:1),(queen:3),(remembrance:1),(river:1),(scale:1),(seek:1),(seem:1),(seems:3),(shapes:1),(show:1),(sister:1),(so:2),(solemn:1),(sometime:1),(son:1),(sorrow:1),(state:1),(suits:2),(suspiration:1),(taken:1),(than:4),(thanks:1),(that:6),(the:9),(thee:1),(therefore:1),(these:2),(they:1),(thine:1),(think:1),(this:2),(thou:1),(though:1),(through:1),(thy:3),(tis:2),(to:5),(together:2),(trappings:1),(truly:1),(twere:1),(us:1),(veiled:1),(visage:1),(warlike:1),(we:3),(weighing:1),(which:2),(whole:1),(why:1),(wife:1),(windy:1),(wisdoms:1),(wisest:1),(with:11),(within:1),(woe:2),(yet:2),(your:1),
+Received message:
+Receiving message [2].
+Received message:('and:1),('closes:2),('faith:1),('friend:1),('friend':1),('gentleman':2),('good:1),('i:3),('not:1),('twere:2),(a:11),(about:2),(access:1),(according:1),(addicted:1),(addition:1),(advice:1),(afflict:1),(affrighted:1),(age:1),(all:3),(am:2),(and:39),(ankle:1),(another:1),(any:2),(are:2),(arm:2),(as:17),(assault:1),(assays:1),(assured:1),(at:6),(ay:4),(bait:1),(be:4),(been:2),(before:2),(behaviour:1),(being:2),(believe:1),(bended:1),(beshrew:1),(better:1),(beyond:1),(bias:1),(blood:1),(breathe:2),(brothel:1),(brow:1),(bulk:1),(but:8),(but':1),(by:6),(carp:1),(cast:1),(charge:1),(close:1),(closes:2),(closet:1),(come:4),(comes:1),(command:1),(common:1),(companions:1),(company:1),(consequence:1),(consequence':2),(converse:1),(country:1),(crimes:1),(danskers:1),(day:1),(demands:1),(denied:1),(desperate:1),(did:6),(directions:1),(discretion:1),(dishonour:2),(distant:1),(do:7),(does:2),(doeswhat:1),(done:1),(doors:1),(doublet:1),(down:1),(downgyved:1),(drabbing:1),(draw:1),(drift:2),(drinking:1),(each:1),(ecstasy:1),
+Received message:(encompassment:1),(end:1),(enter:3),(ever:1),(exeunt:1),(exit:1),(expense:1),
