@@ -60,5 +60,6 @@ bool aat_tree_set_value(AatTree* tree, void* raw_key, void* new_raw_key);
 bool aat_tree_delete(AatTree* tree, void* raw_key);
 // Returns a dynamically allocated string; caller must free()
 char* aat_tree_inorder_list(AatTree* tree);
+// void *att_tree_walk(AatTree* tree, void (*func)(void*));
 
 #endif

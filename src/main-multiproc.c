@@ -8,13 +8,7 @@
 
 #include "../include/counter.h"
 #include "../include/strbuffer.h"
-
-#define MAX_MSG_LEN 1024
-
-typedef struct _proc_message {
-	long type;
-	char text[MAX_MSG_LEN];
-} _proc_message;
+#include "../include/common.h"
 
 typedef struct _proc_receiver_struct {
 	_proc_message message;
@@ -43,7 +37,7 @@ void proc_receiver(_proc_receiver_struct* receiver_struct) {
 
 		printf("Received message:%s\n", receiver_struct->message.text);
 
-		if (receiver_struct->message.text[0] == '\0') {
+		if (receiver_struct->message.type == EXIT_MSG) {
 			printf("break condition met.\n");
 			break;
 		}
@@ -71,9 +65,6 @@ int main(int argc, char* argv[]) {
 	_proc_receiver_struct* receiver_struct = malloc(sizeof(_proc_receiver_struct));
 	receiver_struct->counter = global_counter;
 	receiver_struct->strbuffer = strbuffer;
-	for (int i=1; i<argc; i++) {
-		wait(NULL);
-	}
 
 	for (int i=1; i<argc; i++) {
 		printf("parent working on file=%siteration=%d\n", argv[i], i);
@@ -83,12 +74,13 @@ int main(int argc, char* argv[]) {
 			exit(1);
 		}
 
-		if ((receiver_struct->msg_queue_id = msgget(receiver_struct->key, 0400)) == -1) {
+		if ((receiver_struct->msg_queue_id = msgget(receiver_struct->key, 0666 | IPC_CREAT)) == -1) {
 			perror("msgget");
 			exit(1);
 		}
 		printf("Receiving message [%d].\n", i);
 		proc_receiver(receiver_struct);
+		wait(NULL);
 		if ((msgctl(receiver_struct->msg_queue_id, IPC_RMID, NULL)) == -1) {
 			perror("msgctl[IPC_RMID]");
 			exit(1);
@@ -101,3 +93,36 @@ int main(int argc, char* argv[]) {
 
 	return 0;
 }
+
+
+
+/*
+
+struct message_queue_data {
+	queue_id
+};
+
+struct message {
+	type
+	count
+	str
+};
+
+// code to make the queue here
+
+void send_msg(AatTree* tree, void * raw_key, void * data_) {
+	struct messeage_queue_data data = data_;
+	struct message msg = {NORMAL_MSG, tree->get_val(node), tree->get_key(node)};
+	msgsnd(data->queue_id, msg, MSG_LEN)
+}
+
+message_queue_data mqd = {queue_id};
+AatTree tree;
+aat_tre/e_walk(tree, send_msg, &mqd);
+
+// code to delete the queue here
+
+
+
+
+*/

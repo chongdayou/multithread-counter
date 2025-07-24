@@ -8,13 +8,7 @@
 #include <unistd.h>
 
 #include "../include/counter.h"
-
-#define MAX_MSG_LEN 1024
-
-typedef struct _proc_message {
-	long type;
-	char text[MAX_MSG_LEN];
-} _proc_message;
+#include "../include/common.h"
 
 int main(int argc, char* argv[]) {
 	printf("senderMain: started with file %s\n", argv[1]);
@@ -54,12 +48,12 @@ int main(int argc, char* argv[]) {
 	printf("About to enter message loop.\n");
 	int retry_count = 0;
 	while (msg_index < msg_size) {
-		message.type = 1;
+		message.type = STR_MSG;
 		int chunk_len = msg_size - msg_index >= MAX_MSG_LEN - 1 ? MAX_MSG_LEN - 1 : msg_size - msg_index;
 		strncpy(message.text, word_pairs + msg_index, chunk_len);
 		printf("About to send message.filepath=%smsg_index=%d\n", argv[1], msg_index);
 		msg_index += MAX_MSG_LEN - 1;
-		while (msgsnd(msg_queue_id, &message, strlen(message.text) + 1, IPC_NOWAIT) == -1) {
+		while (msgsnd(msg_queue_id, &message, strlen(message.text) + 1, 0) == -1) {
 			if (errno == EAGAIN) {
 				if (++retry_count > 10000) {
 					fprintf(stderr, "msgsnd: too many retries\n");
@@ -74,7 +68,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	// empty message to indicate end of message
-	message.type = 1;
+	message.type = EXIT_MSG;
 	message.text[0] = '\0';
 	if (msgsnd(msg_queue_id, &message, MAX_MSG_LEN, 0) == -1) {
 		perror("msgsnd");

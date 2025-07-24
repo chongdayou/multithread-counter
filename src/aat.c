@@ -628,3 +628,26 @@ char* aat_tree_inorder_list(AatTree* tree) {
 	strbuffer_free(sb);
 	return ret;
 }
+
+/**
+ * In-order traversal of the tree. Each node is represented as pair (key:value).
+ * 
+ * @param tree Tree to traverse
+ * @param func To apply at each node
+ * 
+ * @return String of keys of nodes in in-order traversal of the tree
+ */
+// void aat_tree_walk(AatTree* tree, void (*func)(AatTree* tree, AatNode *, void *), void* data) {
+// 	aat_tree_walk_aux(tree, tree->root, func, data);
+// }
+
+// void aat_tree_walk_aux(AatTree* tree, AatNode* root, void (*func)(AatTree* tree, AatNode *, void *), void *data) {
+// 	if(root != NULL) {
+// 		aat_tree_walk_aux(tree, root->left, func, data);
+// 		func(tree, root->key, data);
+// 		aat_tree_walk_aux(tree, root->right, func, data);
+// 	}
+// }
+
+
+
