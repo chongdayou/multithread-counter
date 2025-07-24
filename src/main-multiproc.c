@@ -44,6 +44,7 @@ void proc_receiver(_proc_receiver_struct* receiver_struct) {
 		printf("Received message:%s\n", receiver_struct->message.text);
 
 		if (receiver_struct->message.text[0] == '\0') {
+			printf("break condition met.\n");
 			break;
 		}
 	}
@@ -57,7 +58,7 @@ int main(int argc, char* argv[]) {
 			perror("fork failed");
 			exit(1);
 		} else if (pid == 0) {
-			printf("About to fork [%d]\n", i);
+			printf("About to fork [%d],filepath=%s\n", i, argv[i]);
 			proc_sender(argv[i]);
 			perror("execvp failed");
 			exit(1);
@@ -70,23 +71,28 @@ int main(int argc, char* argv[]) {
 	_proc_receiver_struct* receiver_struct = malloc(sizeof(_proc_receiver_struct));
 	receiver_struct->counter = global_counter;
 	receiver_struct->strbuffer = strbuffer;
-	if ((receiver_struct->key = ftok("./src/main-sender.c", 1)) == -1) {
-		perror("ftok");
-		exit(1);
-	}
-
-	if ((receiver_struct->msg_queue_id = msgget(receiver_struct->key, 0400)) == -1) {
-		perror("msgget");
-		exit(1);
-	}
 	for (int i=1; i<argc; i++) {
-		printf("Receiving message [%d].\n", i);
-		proc_receiver(receiver_struct);
 		wait(NULL);
 	}
-	if ((msgctl(receiver_struct->msg_queue_id, IPC_RMID, NULL)) == -1) {
-		perror("msgctl[IPC_RMID]");
-		exit(1);
+
+	for (int i=1; i<argc; i++) {
+		printf("parent working on file=%siteration=%d\n", argv[i], i);
+
+		if ((receiver_struct->key = ftok(argv[i], 1)) == -1) {
+			perror("ftok");
+			exit(1);
+		}
+
+		if ((receiver_struct->msg_queue_id = msgget(receiver_struct->key, 0400)) == -1) {
+			perror("msgget");
+			exit(1);
+		}
+		printf("Receiving message [%d].\n", i);
+		proc_receiver(receiver_struct);
+		if ((msgctl(receiver_struct->msg_queue_id, IPC_RMID, NULL)) == -1) {
+			perror("msgctl[IPC_RMID]");
+			exit(1);
+		}
 	}
 
 	counter_free(global_counter);

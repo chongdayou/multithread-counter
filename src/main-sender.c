@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
 	int msg_queue_id;
 	key_t key;
 
-	if ((key = ftok("./src/main-sender.c", 1)) == -1) {
+	if ((key = ftok(argv[1], 1)) == -1) {
 		perror("ftok");
 		exit(1);
 	}
@@ -52,19 +52,20 @@ int main(int argc, char* argv[]) {
 	int msg_index = 0;
 	size_t msg_size = strlen(word_pairs) + 1;
 	printf("About to enter message loop.\n");
+	int retry_count = 0;
 	while (msg_index < msg_size) {
 		message.type = 1;
-		strncpy(message.text, word_pairs + msg_index, MAX_MSG_LEN - 1);
-		printf("About to send message.\n");
+		int chunk_len = msg_size - msg_index >= MAX_MSG_LEN - 1 ? MAX_MSG_LEN - 1 : msg_size - msg_index;
+		strncpy(message.text, word_pairs + msg_index, chunk_len);
+		printf("About to send message.filepath=%smsg_index=%d\n", argv[1], msg_index);
 		msg_index += MAX_MSG_LEN - 1;
-		int retry_count = 0;
-		if (msgsnd(msg_queue_id, &message, MAX_MSG_LEN, IPC_NOWAIT) == -1) {
+		while (msgsnd(msg_queue_id, &message, strlen(message.text) + 1, IPC_NOWAIT) == -1) {
 			if (errno == EAGAIN) {
 				if (++retry_count > 10000) {
-					fprintf(stderr, "msgsnd: too many retries, giving up.\n");
+					fprintf(stderr, "msgsnd: too many retries\n");
 					exit(1);
 				}
-				usleep(1000);  // sleep 1ms, then try again
+				usleep(1000);  // 1ms
 			} else {
 				perror("msgsnd");
 				exit(1);

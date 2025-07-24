@@ -10,6 +10,7 @@
 		"counter.h": "c",
 		"string.h": "c",
 		"msg.h": "c",
-		"unistd.h": "c"
+		"unistd.h": "c",
+		"strbuffer.h": "c"
 	}
 }
