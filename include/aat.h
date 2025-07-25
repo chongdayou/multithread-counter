@@ -2,9 +2,16 @@
 #define AAT_H
 
 #include <stdbool.h>
+#include "../include/stack.h"
 
 // -- opaque struct forward declarations --
-typedef struct aat_node AatNode;
+typedef struct aat_node {
+	void* key;
+	void* value;
+	int level;
+	AatNode* left;
+	AatNode* right;
+} AatNode;
 
 // -- struct declarations and definitions --
 typedef struct aat_tree AatTree;
@@ -20,6 +27,12 @@ struct aat_tree {
 	char* (* value_to_string) (void*);
 	void (* value_free) (void*);
 };
+
+typedef struct AatIterator {
+	AatTree* tree;
+	NodeStack* iterate_stack;
+	bool is_end;
+} AatIterator;
 
 // -- global variables --
 extern AatNode _aat_bottom_;
@@ -61,5 +74,11 @@ bool aat_tree_delete(AatTree* tree, void* raw_key);
 // Returns a dynamically allocated string; caller must free()
 char* aat_tree_inorder_list(AatTree* tree);
 // void *att_tree_walk(AatTree* tree, void (*func)(void*));
+void* aat_tree_iterator(AatTree* tree);
+
+AatIterator* aat_iterator_make(AatTree* tree_);
+bool aat_iterator_has_next(AatIterator* iterator);
+AatNode* aat_iterator_next(AatIterator* iterator);
+void aat_iterator_free(AatIterator* iterator);
 
 #endif
