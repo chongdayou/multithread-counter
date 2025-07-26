@@ -24,6 +24,7 @@ typedef struct word_counter_pair {
 
 Counter* counter_make();
 void counter_into_tree(Counter* counter, FILE* file);
+void counter_add_pair(Counter* counter, CounterPair pair);
 int counter_search_word_occurence(Counter* counter, const char* word);
 char* counter_get_all_pairs(Counter* counter);
 void counter_free(Counter* counter);

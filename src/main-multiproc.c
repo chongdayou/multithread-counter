@@ -5,6 +5,7 @@
 #include <sys/ipc.h>
 #include <sys/msg.h>
 #include <sys/wait.h>
+#include <string.h>
 
 #include "../include/counter.h"
 #include "../include/strbuffer.h"
@@ -19,10 +20,10 @@ typedef struct _proc_receiver_struct {
 } _proc_receiver_struct;
 
 void proc_sender(char* filepath) {
-	printf("In proc_sender: execvp on ./build/senderMain with %s\n", filepath);
-    fflush(stdout);
+	//printf("In proc_sender: execvp on ./build/senderMain with %s\n", filepath);
+    //fflush(stdout);
 	char* args[] = {"./build/senderMain", filepath, NULL};
-	printf("filepath=%s\n", filepath);
+	//printf("filepath=%s\n", filepath);
 	execvp("./build/senderMain", args);
 	perror("execvp failed");
 	exit(1);
@@ -30,17 +31,23 @@ void proc_sender(char* filepath) {
 
 void proc_receiver(_proc_receiver_struct* receiver_struct) {
 	while (1) {
-		printf("Waiting to receive from queue=%d...\n", receiver_struct->msg_queue_id);
+		//printf("Waiting to receive from queue=%d...\n", receiver_struct->msg_queue_id);
 		if (msgrcv(receiver_struct->msg_queue_id, &receiver_struct->message, sizeof(_word_count_message) - sizeof(long), 0, 0) == -1) {
 			perror("msgrcv");
 			exit(1);
 		}
 
-		printf("Received message:%s=%d\n", receiver_struct->message.text, receiver_struct->message.count);
+		//printf("Received message:%s=%d\n", receiver_struct->message.text, receiver_struct->message.count);
 
 		if (receiver_struct->message.type == EXIT_MSG) {
-			printf("break condition met.\n");
+			//printf("break condition met.\n");
 			break;
+		} else {
+			CounterPair pair;
+			strncpy(pair.word, receiver_struct->message.text, MAX_WORD_LEN - 1);
+			pair.word[MAX_WORD_LEN - 1] = '\0';
+			pair.count = receiver_struct->message.count;
+			counter_add_pair(receiver_struct->counter, pair);
 		}
 	}
 }
@@ -53,7 +60,7 @@ int main(int argc, char* argv[]) {
 			perror("fork failed");
 			exit(1);
 		} else if (pid == 0) {
-			printf("About to fork [%d],filepath=%s\n", i, argv[i]);
+			//printf("About to fork [%d],filepath=%s\n", i, argv[i]);
 			proc_sender(argv[i]);
 			perror("execvp failed");
 			exit(1);
@@ -78,8 +85,8 @@ int main(int argc, char* argv[]) {
 			perror("msgget");
 			exit(1);
 		}
-		printf("parent working on file=%siteration=%dqueue=%d\n", argv[i], i, receiver_struct.msg_queue_id);
-		printf("Receiving message [%d].\n", i);
+		//printf("parent working on file=%siteration=%dqueue=%d\n", argv[i], i, receiver_struct.msg_queue_id);
+		//printf("Receiving message [%d].\n", i);
 		proc_receiver(&receiver_struct);
 		wait(NULL);
 		if ((msgctl((&receiver_struct)->msg_queue_id, IPC_RMID, NULL)) == -1) {
@@ -87,6 +94,10 @@ int main(int argc, char* argv[]) {
 			exit(1);
 		}
 	}
+
+	char* all_pairs = counter_get_all_pairs(global_counter);
+	printf("%s\n", all_pairs);
+	free(all_pairs);
 
 	// for (int i=1; i<argc; i++) {
 	// 	wait(NULL);

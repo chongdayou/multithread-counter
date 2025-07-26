@@ -630,8 +630,7 @@ char* aat_tree_inorder_list(AatTree* tree) {
  */
 AatIterator* aat_iterator_make(AatTree* tree_) {
 	AatIterator* iterator = malloc(sizeof(AatIterator));
-	NodeStack stack;
-	NodeStack* stack_ptr = &stack;
+	NodeStack* stack_ptr = malloc(sizeof(NodeStack));
 	stack_init(stack_ptr);
 	iterator->iterate_stack = stack_ptr;
 	iterator->is_end = false;
@@ -687,9 +686,14 @@ AatNode* aat_iterator_next(AatIterator* iterator) {
  * @param iterator Iterator to free from heap memory
  */
 void aat_iterator_free(AatIterator* iterator) {
-	stack_free(iterator->iterate_stack);
-	iterator->tree = NULL;
-	free(iterator);
+	if (iterator) {
+		if (iterator->iterate_stack) {
+			stack_free(iterator->iterate_stack);
+			free(iterator->iterate_stack);
+		}
+		iterator->tree = NULL;
+		free(iterator);
+	}
 }
 // void aat_tree_walk(AatTree* tree, void (*func)(AatTree* tree, AatNode *, void *), void* data) {
 // 	aat_tree_walk_aux(tree, tree->root, func, data);

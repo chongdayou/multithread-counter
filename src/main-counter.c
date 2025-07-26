@@ -4,24 +4,20 @@
 #include "../include/counter.h"
 
 int main(int argc, char* argv[]) {
-
-	FILE* file = fopen(argv[1], "r");
-	if (!file) {
-		fprintf(stderr, "Failed to open file.\n");
-		exit(1);
-	}
-
+	FILE* file = fopen("text/HamletActIISceneI.txt", "r");
 	Counter* counter = counter_make();
 	counter_into_tree(counter, file);
+
+	CounterIterator* iterator = counter_iterator_make(counter);
+	CounterPair pair;
+	while (counter_iterator_has_next(iterator)) {
+		pair = counter_iterator_next(iterator);
+		printf("(%s,%d), ", pair.word, pair.count);
+	}
+	printf("\n");
+
 	fclose(file);
-
-	int hamlet_occurence = counter_search_word_occurence(counter, "hamlet");
-	printf("The word \"hamlet\" appeared this many times: %d.\n", hamlet_occurence);
-
-	char* hamlet_pairs = counter_get_all_pairs(counter);
-	printf("Each word and the number it appeared in file: \n%s\n\n", hamlet_pairs);
-
-	free(hamlet_pairs);
+	counter_iterator_free(iterator);
 	counter_free(counter);
 
 	return 0;

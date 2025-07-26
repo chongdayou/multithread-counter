@@ -71,6 +71,22 @@ void counter_into_tree(Counter* counter, FILE* file) {
 }
 
 /**
+ * Add a pair (key,value) into the tree in the given counter
+ * 
+ * @param counter Counter to add pair into
+ * @param pair Pair that contains the new key and value
+ */
+void counter_add_pair(Counter* counter, CounterPair pair) {
+	if (aat_tree_exists(counter->tree, pair.word)) {
+		int* val = (int*) aat_tree_get_value(counter->tree, pair.word);
+		int new_val = *val + pair.count;
+		aat_tree_set_value(counter->tree, pair.word, &new_val);
+	} else {
+		aat_tree_insert(counter->tree, pair.word, &pair.count);
+	}
+}
+
+/**
  * Change the word to all lower case and remove potential punctuations. If '\'' is found and the next char 
  * is not 's', then both will be included.
  * 
@@ -86,10 +102,11 @@ static char* clean_tolower_word(char* word) {
 	while (old_word_index < word_len) {
 		if (isalnum((unsigned char)word[old_word_index])) {
 			new_word[new_word_index++] = tolower((unsigned char)word[old_word_index]);
-		} else if (word[old_word_index] == '\'' && old_word_index < word_len && word[old_word_index+1] != 's') {
-			new_word[new_word_index++] = word[old_word_index];
-			new_word[new_word_index++] = tolower((unsigned char)word[++old_word_index]);
 		}
+		// else if (word[old_word_index] == '\'' && old_word_index < word_len && word[old_word_index+1] != 's') {
+		// 	new_word[new_word_index++] = word[old_word_index];
+		// 	new_word[new_word_index++] = tolower((unsigned char)word[++old_word_index]);
+		// }
 		old_word_index++;
 	}
 
