@@ -2,6 +2,9 @@ mkdir -p build
 make runMultiprocMain
 make[1]: Entering directory '/mnt/c/Users/terry/_Study/research/systems-2025summer/multithread-counter'
 rm -f build/*{.o,.d,multiprocMain,senderMain}
+gcc -c src/counter.c -o build/counter.o -Wall -O2 -MMD -MP
+gcc -c src/main-multiproc.c -o build/main-multiproc.o -Wall -O2 -MMD -MP
+gcc -c src/main-sender.c -o build/main-sender.o -Wall -O2 -MMD -MP
 gcc build/main-sender.o build/counter.o build/strbuffer.o build/aat.o build/stack.o -o build/senderMain
 gcc build/main-multiproc.o build/counter.o build/strbuffer.o build/aat.o build/stack.o -o build/multiprocMain
 ./build/multiprocMain text/HamletActISceneII.txt text/HamletActIISceneI.txt text/HamletActIIISceneI.txt text/HamletActIIISceneII.txt text/HamletActIVSceneV.txt

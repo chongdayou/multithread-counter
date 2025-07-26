@@ -81,6 +81,7 @@ void counter_add_pair(Counter* counter, CounterPair pair) {
 		int* val = (int*) aat_tree_get_value(counter->tree, pair.word);
 		int new_val = *val + pair.count;
 		aat_tree_set_value(counter->tree, pair.word, &new_val);
+		free(val);
 	} else {
 		aat_tree_insert(counter->tree, pair.word, &pair.count);
 	}
