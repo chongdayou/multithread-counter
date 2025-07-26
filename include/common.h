@@ -2,21 +2,17 @@
 #define COMMON_H
 
 #define MAX_MSG_LEN 1024
+#define MAX_WORD_LEN 128
 
-typedef struct _proc_message {
+typedef struct _word_count_message {
 	long type;
-	char text[MAX_MSG_LEN];
-} _proc_message;
-
-typedef struct __proc_message {
-	long type;
-	long count;
-	char text[];
-} __proc_message;
+	int count;
+	char text[MAX_WORD_LEN];
+} _word_count_message;
 
 typedef enum _message_type {
 	// CON_KEY_MSG, END_KEY_MSG, EXIT_MSG
-	STR_MSG = 1, EXIT_MSG
+	END_PAIR_MSG = 1, CON_PAIR_MSG, EXIT_MSG
 } _message_type;
 
 #endif// COMMON_H

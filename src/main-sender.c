@@ -8,12 +8,15 @@
 #include <unistd.h>
 
 #include "../include/counter.h"
+#include "../include/aat.h"
 #include "../include/common.h"
+
+// TODO: add mechanism to handle the case when message length exceeds _word_count_message.text capacity
 
 int main(int argc, char* argv[]) {
 	printf("senderMain: started with file %s\n", argv[1]);
 	fflush(stdout);
-	_proc_message message;
+	_word_count_message message;
 	int msg_queue_id;
 	key_t key;
 
@@ -37,6 +40,41 @@ int main(int argc, char* argv[]) {
 	counter_into_tree(counter, file);
 	fclose(file);
 
+	CounterIterator* counter_iterator = counter_iterator_make(counter);
+
+	CounterPair pair;
+	//printf("here\n");
+	while (counter_iterator_has_next(counter_iterator)) {
+		pair = counter_iterator_next(counter_iterator);
+		message.count = pair.count;
+		strcpy(message.text, pair.word);
+		message.type = END_PAIR_MSG;
+		printf("Sender sending: word=%s,count=%d,hasNext=%s,queue=%d.\n", message.text, message.count, counter_iterator_has_next(counter_iterator) ? "t" : "f", msg_queue_id);
+		if (msgsnd(msg_queue_id, &message, sizeof(_word_count_message) - sizeof(long), 0) == -1) {
+			perror("msgsnd");
+			exit(1);
+		}
+	}
+	printf("Sender queue = [%d] finished sending.\n", msg_queue_id);
+
+	// empty message to indicate end of message
+	message.type = EXIT_MSG;
+	message.count = 0;
+	message.text[0] = '\0';
+	printf("Sender sent EXIT_MSG to queue=%d\n", msg_queue_id);
+	if (msgsnd(msg_queue_id, &message, MAX_WORD_LEN, 0) == -1) {
+		perror("msgsnd");
+		exit(1);
+	}
+
+	counter_iterator_free(counter_iterator);
+	counter_free(counter);
+
+	printf("senderMain: finished.\n");
+	fflush(stdout);
+
+	return 0;
+/*
 	char* word_pairs = counter_get_all_pairs(counter);
 	printf("Calling counter_get_all_pairs\n");
 	if (!word_pairs) {
@@ -77,6 +115,7 @@ int main(int argc, char* argv[]) {
 
 	free(word_pairs);
 	counter_free(counter);
+*/
 
 	printf("senderMain: finished.\n");
 	fflush(stdout);

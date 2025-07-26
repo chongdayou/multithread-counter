@@ -631,7 +631,7 @@ char* aat_tree_inorder_list(AatTree* tree) {
 AatIterator* aat_iterator_make(AatTree* tree_) {
 	AatIterator* iterator = malloc(sizeof(AatIterator));
 	NodeStack stack;
-	NodeStack* stack_ptr;
+	NodeStack* stack_ptr = &stack;
 	stack_init(stack_ptr);
 	iterator->iterate_stack = stack_ptr;
 	iterator->is_end = false;
@@ -642,6 +642,8 @@ AatIterator* aat_iterator_make(AatTree* tree_) {
 		stack_push(stack_ptr, current);
 		current = current->left;
 	}
+
+	return iterator;
 }
 
 /**
@@ -667,10 +669,14 @@ AatNode* aat_iterator_next(AatIterator* iterator) {
 
 	AatNode* popped = stack_pop(iterator->iterate_stack);
 	AatNode* next = popped->right;
+	//int depth = 0;
 	while(next != _aat_bottom) {
+		//printf("depth=%d\n", depth++);
 		stack_push(iterator->iterate_stack, next);
 		next = next->left;
 	}
+
+	if (stack_is_empty(iterator->iterate_stack)) iterator->is_end = true;
 
 	return popped;
 }

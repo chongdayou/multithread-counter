@@ -7,6 +7,7 @@
 #include "../include/counter.h"
 #include "../include/aat.h"
 #include "../include/compat.h"
+#include "../include/common.h"
 
 static void add_to_tree(AatTree* tree, char* key);
 static char* clean_tolower_word(char* word);
@@ -174,4 +175,58 @@ char* counter_get_all_pairs(Counter* counter) {
 void counter_free(Counter* counter) {
 	aat_tree_free(counter->tree);
 	free(counter);
+}
+
+/**
+ * Make a new iterator for given Counter.
+ * 
+ * @param tree Counter to make the iterator upon
+ * 
+ * @return A new CounterIterator
+ * 
+ * @note Insertion and deletion of nodes in Counter->tree in between an iterator's lifecycle may not be reflected
+ * 		and may cause unexpected errors, especially segmentation fault with deletion
+ */
+CounterIterator* counter_iterator_make(Counter* counter) {
+	AatIterator* tree_iterator_ = aat_iterator_make(counter->tree);
+	CounterIterator* counter_iterator = malloc(sizeof(CounterIterator));
+	counter_iterator->tree_iterator = tree_iterator_;
+	return counter_iterator;
+}
+
+/**
+ * Check if iterator has traversed through every node in Counter->tree
+ * 
+ * @param iterator Iterator to check
+ * 
+ * @return True if iterator has next node, false otherwise
+ */
+bool counter_iterator_has_next(CounterIterator* iterator) {
+	return aat_iterator_has_next(iterator->tree_iterator);
+}
+
+/**
+ * Get next CounterPair from the iterator
+ * 
+ * @param iterator Iterator to get next node from
+ * 
+ * @return The next pair in the iterator, NULL if iterator does not have next pair
+ */
+CounterPair counter_iterator_next(CounterIterator* iterator) {
+	CounterPair pair;
+	AatNode* next_node = aat_iterator_next(iterator->tree_iterator);
+	strncpy(pair.word, (char*) next_node->key, MAX_WORD_LEN - 1);
+	pair.word[MAX_WORD_LEN - 1] = '\0';
+	pair.count = *(int*) next_node->value;
+	return pair;
+}
+
+/**
+ * Free given CounterIterator
+ * 
+ * @param iterator Iterator to free from heap memory
+ */
+void counter_iterator_free(CounterIterator* iterator) {
+	aat_iterator_free(iterator->tree_iterator);
+	free(iterator);
 }

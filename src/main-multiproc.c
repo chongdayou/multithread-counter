@@ -11,7 +11,7 @@
 #include "../include/common.h"
 
 typedef struct _proc_receiver_struct {
-	_proc_message message;
+	_word_count_message message;
 	int msg_queue_id;
 	key_t key;
 	Counter* counter;
@@ -30,12 +30,13 @@ void proc_sender(char* filepath) {
 
 void proc_receiver(_proc_receiver_struct* receiver_struct) {
 	while (1) {
-		if (msgrcv(receiver_struct->msg_queue_id, &receiver_struct->message, MAX_MSG_LEN, 0, 0) == -1) {
+		printf("Waiting to receive from queue=%d...\n", receiver_struct->msg_queue_id);
+		if (msgrcv(receiver_struct->msg_queue_id, &receiver_struct->message, sizeof(_word_count_message) - sizeof(long), 0, 0) == -1) {
 			perror("msgrcv");
 			exit(1);
 		}
 
-		printf("Received message:%s\n", receiver_struct->message.text);
+		printf("Received message:%s=%d\n", receiver_struct->message.text, receiver_struct->message.count);
 
 		if (receiver_struct->message.type == EXIT_MSG) {
 			printf("break condition met.\n");
@@ -62,34 +63,38 @@ int main(int argc, char* argv[]) {
 	// in parent
 	Counter* global_counter = counter_make();
 	StrBuffer* strbuffer = strbuffer_make(INITIAL_CAPACITY);
-	_proc_receiver_struct* receiver_struct = malloc(sizeof(_proc_receiver_struct));
-	receiver_struct->counter = global_counter;
-	receiver_struct->strbuffer = strbuffer;
 
 	for (int i=1; i<argc; i++) {
-		printf("parent working on file=%siteration=%d\n", argv[i], i);
+		_proc_receiver_struct receiver_struct;
+		receiver_struct.counter = global_counter;
+		receiver_struct.strbuffer = strbuffer;
 
-		if ((receiver_struct->key = ftok(argv[i], 1)) == -1) {
+		if ((receiver_struct.key = ftok(argv[i], 1)) == -1) {
 			perror("ftok");
 			exit(1);
 		}
 
-		if ((receiver_struct->msg_queue_id = msgget(receiver_struct->key, 0666 | IPC_CREAT)) == -1) {
+		if ((receiver_struct.msg_queue_id = msgget(receiver_struct.key, 0666 | IPC_CREAT)) == -1) {
 			perror("msgget");
 			exit(1);
 		}
+		printf("parent working on file=%siteration=%dqueue=%d\n", argv[i], i, receiver_struct.msg_queue_id);
 		printf("Receiving message [%d].\n", i);
-		proc_receiver(receiver_struct);
+		proc_receiver(&receiver_struct);
 		wait(NULL);
-		if ((msgctl(receiver_struct->msg_queue_id, IPC_RMID, NULL)) == -1) {
+		if ((msgctl((&receiver_struct)->msg_queue_id, IPC_RMID, NULL)) == -1) {
 			perror("msgctl[IPC_RMID]");
 			exit(1);
 		}
 	}
 
+	// for (int i=1; i<argc; i++) {
+	// 	wait(NULL);
+	// }
+
 	counter_free(global_counter);
 	strbuffer_free(strbuffer);
-	free(receiver_struct);
+	//free(receiver_struct);
 
 	return 0;
 }
