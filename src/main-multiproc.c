@@ -96,7 +96,9 @@ int main(int argc, char* argv[]) {
 	}
 
 	char* all_pairs = counter_get_all_pairs(global_counter);
-	printf("%s\n", all_pairs);
+	FILE* output_file = fopen("output-procs.txt", "w");
+	fprintf(output_file, "%s\n", all_pairs);
+	fclose(output_file);
 	free(all_pairs);
 
 	// for (int i=1; i<argc; i++) {

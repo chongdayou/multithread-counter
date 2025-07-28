@@ -1,5 +1,6 @@
 default:
 	mkdir -p build
+	$(MAKE) runMultithreadMain
 	$(MAKE) runMultiprocMain
 
 runAatMain: cleanAatMain buildAat
@@ -10,6 +11,9 @@ runCounterMain: cleanCounterMain buildCounter
 
 runMultiprocMain: cleanMultiprocMain buildMultiproc buildSender
 	./build/multiprocMain text/HamletActISceneII.txt text/HamletActIISceneI.txt text/HamletActIIISceneI.txt text/HamletActIIISceneII.txt text/HamletActIVSceneV.txt
+
+runMultithreadMain: cleanMultithreadMain buildMultithread
+	./build/multithreadMain text/HamletActISceneII.txt text/HamletActIISceneI.txt text/HamletActIIISceneI.txt text/HamletActIIISceneII.txt text/HamletActIVSceneV.txt
 
 buildAat: build/main-aat.o build/aat.o build/stack.o build/strbuffer.o
 	gcc build/main-aat.o build/aat.o build/stack.o build/strbuffer.o -o build/aatMain
@@ -23,6 +27,9 @@ buildMultiproc: build/main-multiproc.o buildSender
 buildSender: build/main-sender.o
 	gcc build/main-sender.o build/counter.o build/strbuffer.o build/aat.o build/stack.o -o build/senderMain
 
+buildMultithread: build/main-multithread.o
+	gcc build/main-multithread.o build/counter.o build/aat.o build/strbuffer.o build/stack.o -o build/multithreadMain
+
 cleanAatMain:
 	rm -f build/*.o build/*.d build/aatMain
 
@@ -31,6 +38,12 @@ cleanCounterMain:
 
 cleanMultiprocMain:
 	rm -f build/*{.o,.d,multiprocMain,senderMain}
+
+cleanMultithreadMain:
+	rm -f build/*{.o,.d,multithreadMain}
+
+build/main-multithread.o: src/main-multithread.c build/counter.o build/aat.o
+	gcc -c src/main-multithread.c -o build/main-multithread.o -Wall -O2 -MMD -MP
 
 build/main-sender.o: src/main-sender.c build/counter.o
 	gcc -c src/main-sender.c -o build/main-sender.o -Wall -O2 -MMD -MP
