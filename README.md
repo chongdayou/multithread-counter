@@ -1,4 +1,4 @@
-# multithread-counter
+# multithreaded-wordmap
 
 MapReduce word-count done with multi processes or multithreads.
 
