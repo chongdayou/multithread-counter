@@ -1,6 +1,6 @@
 # multithreaded-wordmap
 
-MapReduce word-count done with multi processes or multithreads.
+MapReduce-inspired word-count done with multi processes or multithreads.
 
 # Word Counter
 
@@ -28,4 +28,4 @@ The program described above is in `main-multithreads.c`.
 
 # Additional Info
 ## References
-[generic-aatree-c](https://github.com/chongdayou/generic-aatree-c)AATree implementation in C with iterable and generic type behavior
+[generic-aatree-c](https://github.com/chongdayou/generic-aatree-c): AATree implementation in C with iterable and generic type behavior
